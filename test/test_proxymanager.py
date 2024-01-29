@@ -12,7 +12,7 @@ from .port_helpers import find_unused_port
 
 class TestProxyManager:
     @pytest.mark.parametrize("proxy_scheme", ["http", "https"])
-    def test_proxy_headers(self, proxy_scheme: str) -> None:
+    def test_proxy_headers(self, proxy_scheme: str, http_version: str) -> None:
         url = "http://pypi.org/project/urllib3/"
         proxy_url = f"{proxy_scheme}://something:1234"
         with ProxyManager(proxy_url) as p:
@@ -41,7 +41,7 @@ class TestProxyManager:
 
             assert headers == expected_headers
 
-    def test_default_port(self) -> None:
+    def test_default_port(self, http_version: str) -> None:
         with ProxyManager("http://something") as p:
             assert p.proxy is not None
             assert p.proxy.port == 80
@@ -55,7 +55,9 @@ class TestProxyManager:
         with pytest.raises(ValueError):
             ProxyManager("invalid://host/p")
 
-    def test_proxy_tunnel(self) -> None:
+    def test_proxy_tunnel(self, http_version: str) -> None:
+        # todo: note that h2 should only support forwarding
+        # per: https://github.com/urllib3/urllib3/issues/3298
         http_url = parse_url("http://example.com")
         https_url = parse_url("https://example.com")
         with ProxyManager("http://proxy:8080") as p:
@@ -70,7 +72,7 @@ class TestProxyManager:
             assert p._proxy_requires_url_absolute_form(http_url)
             assert p._proxy_requires_url_absolute_form(https_url)
 
-    def test_proxy_connect_retry(self) -> None:
+    def test_proxy_connect_retry(self, http_version) -> None:
         retry = Retry(total=None, connect=False)
         port = find_unused_port()
         with ProxyManager(f"http://localhost:{port}") as p:

@@ -77,7 +77,7 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
         super().teardown_class()
         shutil.rmtree(cls.certs_dir)
 
-    def test_basic_proxy(self) -> None:
+    def test_basic_proxy(self, http_version) -> None:
         with proxy_from_url(self.proxy_url, ca_certs=DEFAULT_CA) as http:
             r = http.request("GET", f"{self.http_url}/")
             assert r.status == 200
